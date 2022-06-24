@@ -32,4 +32,9 @@ module.exports = class Font {
     getFontHeight() {
         return this.ascent + this.descent;
     }
+
+    //get font size
+    getFontSize() {
+        return this.getFontHeight();
+    }
 }

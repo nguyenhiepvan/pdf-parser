@@ -5,12 +5,11 @@ const fs = require("fs");
 const CMAP_URL = "./node_modules/pdfjs-dist/cmaps/";
 const CMAP_PACKED = true;
 const STANDARD_FONT_DATA_URL = "./node_modules/pdfjs-dist/standard_fonts/";
-const pdfPath = process.argv[2] || "./test.pdf";
+const pdfPath = process.argv[2] || "./input/test.pdf";
 const data = new Uint8Array(fs.readFileSync(pdfPath));
-const list_fonts = [];
-const list_phrases = [];
 const Font = require("./Entities/Font.js");
 const Phrase = require("./Entities/Phrase.js");
+const Page = require("./Entities/Page.js");
 
 const loadingTask = pdfjsLib.getDocument({
     data, cMapUrl: CMAP_URL, cMapPacked: CMAP_PACKED, standardFontDataUrl: STANDARD_FONT_DATA_URL,
@@ -19,9 +18,11 @@ const loadingTask = pdfjsLib.getDocument({
 (async function () {
     try {
         const pdfDocument = await loadingTask.promise;
-        for (let i = 0; i < pdfDocument.numPages; i++) {
-            (function (pageNumber) {
-                parse(pageNumber, pdfDocument);
+        const totalPages = pdfDocument.numPages;
+
+        for (let i = 0; i <totalPages; i++) {
+            await (async function (pageNumber) {
+                await parse(pageNumber, pdfDocument);
             })(i + 1);
         }
     } catch (reason) {
@@ -30,19 +31,29 @@ const loadingTask = pdfjsLib.getDocument({
 })();
 
 function parse(pageNum, PDFDocumentInstance) {
+    console.log("parsing page #" + pageNum);
     return new Promise(function (resolve, reject) {
         PDFDocumentInstance.getPage(pageNum).then(function (pdfPage) {
             pdfPage.getTextContent().then(function (textContent) {
-                getPhrases(textContent);
-                //TODO: merge phrases
+                let viewport = pdfPage.getViewport({scale: 1});
+                let list_fonts = getPageFonts(textContent);
+                let list_phrases = getPhrases(textContent, list_fonts);
+                let page = new Page(pageNum, viewport.width, viewport.height, list_phrases, list_fonts);
+                let append = "<p>=============( " + pageNum + " )=============</p>\n";
+                fs.appendFile('output/output.html', append + page.getHtml(), err => {
+                    if (err) {
+                        console.error(err)
+                        process.exit(0);
+                    }
+                })
                 resolve();
             });
         });
     });
 }
 
-function getPhrases(textContent) {
-    getPageFonts(textContent);
+function getPhrases(textContent, list_fonts) {
+    let list_phrases = [];
     let items = JSON.parse(JSON.stringify(textContent.items));
     for (let item in items) {
         let data = items[item];
@@ -50,9 +61,11 @@ function getPhrases(textContent) {
         let font = list_fonts.find(f => f.name === font_name);
         list_phrases.push(new Phrase(text, direction, width, height, transform, font, hasEOL));
     }
+    return list_phrases;
 }
 
 function getPageFonts(textContent) {
+    let list_fonts = [];
     let styles = JSON.parse(JSON.stringify(textContent.styles));
     for (let fontName in styles) {
         let fontData = styles[fontName];
@@ -62,4 +75,5 @@ function getPageFonts(textContent) {
             list_fonts.push(font);
         }
     }
+    return list_fonts;
 }
