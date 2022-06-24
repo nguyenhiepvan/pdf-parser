@@ -5,7 +5,7 @@ const fs = require("fs");
 const CMAP_URL = "./node_modules/pdfjs-dist/cmaps/";
 const CMAP_PACKED = true;
 const STANDARD_FONT_DATA_URL = "./node_modules/pdfjs-dist/standard_fonts/";
-const pdfPath = process.argv[2] || "./input/test.pdf";
+const pdfPath = process.argv[2] || "./input/test2.pdf";
 const data = new Uint8Array(fs.readFileSync(pdfPath));
 const Font = require("./Entities/Font.js");
 const Phrase = require("./Entities/Phrase.js");
@@ -40,7 +40,7 @@ function parse(pageNum, PDFDocumentInstance) {
                 let list_phrases = getPhrases(textContent, list_fonts);
                 let page = new Page(pageNum, viewport.width, viewport.height, list_phrases, list_fonts);
                 let append = "<p>=============( " + pageNum + " )=============</p>\n";
-                fs.appendFile('output/output.html', append + page.getHtml(), err => {
+                fs.appendFile('output/output2.txt', append + page.getText(), err => {
                     if (err) {
                         console.error(err)
                         process.exit(0);
