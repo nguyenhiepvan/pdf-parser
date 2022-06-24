@@ -9,3 +9,4 @@
 - [x] increase font size
 - [ ] detect table
 - [ ] detect figure
+- [ ] detect column
