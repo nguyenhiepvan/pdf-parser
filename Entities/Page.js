@@ -11,16 +11,33 @@ module.exports = class Page {
         this.lines = this.groupPhrases(phrases);
     }
 
-    //sort fonts by font size
+    //median of all font sizes
+    getMedianFontSize() {
+        let fontSizes = this.lines.map(line => line.getFont().getFontSize());
+        fontSizes.sort((a, b) => a - b);
+        return fontSizes[Math.floor(fontSizes.length / 2)];
+    }
+
+    //avg of all font sizes
+    getAvgFontSize() {
+        let fontSizes = this.lines.map(line => line.getFont().getFontSize());
+        return fontSizes.reduce((a, b) => a + b) / fontSizes.length;
+    }
 
     // map nearest font size to html tag
     getHtmlTag(font, inject_style = "") {
         let fontSize = font.getFontSize();
 
-        if (fontSize < 14) {
+        let medianFontSize = this.getMedianFontSize();
+        let avgFontSize = this.getAvgFontSize();
+
+        let [small,medium] = [Math.min(medianFontSize,avgFontSize), Math.max(medianFontSize,avgFontSize)];
+
+
+        if (fontSize < small) {
             return "<p style=\"" + inject_style + "font-size: small;\">";
         }
-        if (fontSize < 16) {
+        if (fontSize < medium) {
             return "<p style=\"" + inject_style + "font-size: medium;\">";
         }
         return "<p style=\"" + inject_style + "font-size: large;\">";
