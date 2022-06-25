@@ -2,7 +2,7 @@
 
 - [x] parse pdf page by page
 - [x] convert pdf to txt
-- [x] convert pdf to html
+- [x] convert pdf to html (text only)
 - [x] get common fonts of document, set font family
 - [x] increase font size
 - [ ] detect phrase is bold/italic/underline/strikethrough or not
