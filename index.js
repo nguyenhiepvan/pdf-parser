@@ -10,23 +10,37 @@ const data = new Uint8Array(fs.readFileSync(pdfPath));
 const Font = require("./Entities/Font.js");
 const Phrase = require("./Entities/Phrase.js");
 const Page = require("./Entities/Page.js");
+const Document = require("./Entities/Document.js");
 
 const loadingTask = pdfjsLib.getDocument({
     data, cMapUrl: CMAP_URL, cMapPacked: CMAP_PACKED, standardFontDataUrl: STANDARD_FONT_DATA_URL,
 });
 
 (async function () {
-    try {
-        const pdfDocument = await loadingTask.promise;
-        const totalPages = pdfDocument.numPages;
+    const pdfDocument = await loadingTask.promise;
+    const totalPages = pdfDocument.numPages;
+    let list_pages = [];
 
-        for (let i = 0; i <totalPages; i++) {
-            await (async function (pageNumber) {
-                await parse(pageNumber, pdfDocument);
-            })(i + 1);
-        }
-    } catch (reason) {
-        console.log(reason);
+    for (let i = 0; i < totalPages; i++) {
+        await (async function (pageNumber) {
+            let page = await parse(pageNumber, pdfDocument);
+            list_pages.push(page);
+        })(i + 1);
+    }
+    if (list_pages.length > 0) {
+        let document = new Document(list_pages);
+        let append = "<p>==========================</p>\n";
+        let html = document.getHtml(append);
+        fs.appendFile('output/output11.html', html, err => {
+            if (err) {
+                console.error(err)
+                process.exit(0);
+            }
+        })
+        console.log("done");
+    } else {
+        //throw error
+        throw new Error("No pages found");
     }
 })();
 
@@ -39,14 +53,7 @@ function parse(pageNum, PDFDocumentInstance) {
                 let list_fonts = getPageFonts(textContent);
                 let list_phrases = getPhrases(textContent, list_fonts);
                 let page = new Page(pageNum, viewport.width, viewport.height, list_phrases, list_fonts);
-                let append = "<p>=============( " + pageNum + " )=============</p>\n";
-                fs.appendFile('output/output1.html', append + page.getHtml(), err => {
-                    if (err) {
-                        console.error(err)
-                        process.exit(0);
-                    }
-                })
-                resolve();
+                resolve(page);
             });
         });
     });

@@ -41,7 +41,7 @@ module.exports = class Line {
         return this.phrases.map(phrase => phrase.getText()).join("\n");
     }
 
-    getHtml() {
-        return this.phrases.map(phrase => "<span style='"+phrase.getTransformCss()+"'>"+ phrase.getHtml() + "</span>").join("\n");
+    getHtml(inject_style = "") {
+        return this.phrases.map(phrase => "<span style='" + phrase.getTransformCss() + ";" + inject_style + "'>" + phrase.getHtml() + "</span>").join("\n");
     }
 }

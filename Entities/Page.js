@@ -9,38 +9,56 @@ module.exports = class Page {
         this.pageHeight = pageHeight;
         this.fonts = fonts;
         this.lines = this.groupPhrases(phrases);
+        this.getMedianFontSize();
+        this.getAvgFontSize();
     }
 
     //median of all font sizes
     getMedianFontSize() {
-        let fontSizes = this.lines.map(line => line.getFont().getFontSize());
-        fontSizes.sort((a, b) => a - b);
-        return fontSizes[Math.floor(fontSizes.length / 2)];
+        if (typeof this.medianFontSize === "undefined") {
+            let fontSizes = this.lines.map(line => line.getFont().getFontSize());
+            fontSizes.sort((a, b) => a - b);
+            this.medianFontSize = fontSizes[Math.floor(fontSizes.length / 2)];
+        }
+        return this.medianFontSize;
+    }
+
+    //set median font size
+    setMedianFontSize(medianFontSize) {
+        this.medianFontSize = medianFontSize;
+    }
+
+    //set avg font size
+    setAvgFontSize(avgFontSize) {
+        this.avgFontSize = avgFontSize;
     }
 
     //avg of all font sizes
     getAvgFontSize() {
-        let fontSizes = this.lines.map(line => line.getFont().getFontSize());
-        return fontSizes.reduce((a, b) => a + b) / fontSizes.length;
+        if (typeof this.avgFontSize === "undefined") {
+            let fontSizes = this.fonts.map(font => font.getFontSize());
+            this.avgFontSize = fontSizes.reduce((a, b) => a + b) / fontSizes.length;
+        }
+        return this.avgFontSize;
     }
 
     // map nearest font size to html tag
     getHtmlTag(font, inject_style = "") {
         let fontSize = font.getFontSize();
 
-        let medianFontSize = this.getMedianFontSize();
-        let avgFontSize = this.getAvgFontSize();
+        let medianFontSize = this.medianFontSize;
+        let avgFontSize = this.avgFontSize;
 
-        let [small,medium] = [Math.min(medianFontSize,avgFontSize), Math.max(medianFontSize,avgFontSize)];
+        let [small, medium] = [Math.min(medianFontSize, avgFontSize), Math.max(medianFontSize, avgFontSize)];
 
 
         if (fontSize < small) {
-            return "<p style=\"" + inject_style + "font-size: small;\">";
+            return "<p style=\"" + inject_style + "font-size: small;font-family: " + font.getFontFamily() + "\">";
         }
         if (fontSize < medium) {
-            return "<p style=\"" + inject_style + "font-size: medium;\">";
+            return "<p style=\"" + inject_style + "font-size: medium;font-family: " + font.getFontFamily() + "\">";
         }
-        return "<p style=\"" + inject_style + "font-size: large;\">";
+        return "<p style=\"" + inject_style + "font-size: large;font-family: " + font.getFontFamily() + "\">";
     }
 
     //group phrases by top
@@ -68,7 +86,7 @@ module.exports = class Page {
         return this.lines.map(line => line.getText()).join("\n");
     }
 
-    getHtml() {
-        return this.lines.map(line => this.getHtmlTag(line.getFont()) + line.getHtml() + "</p>").join("\n");
+    getHtml(inject_style = "") {
+        return this.lines.map(line => this.getHtmlTag(line.getFont()) + line.getHtml(inject_style) + "</p>").join("\n");
     }
 }
