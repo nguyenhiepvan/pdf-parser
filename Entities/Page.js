@@ -83,10 +83,10 @@ module.exports = class Page {
 
     //get text
     getText() {
-        return this.lines.map(line => line.getText()).join("\n");
+        return this.lines.map(line => line.getText()).join("");
     }
 
     getHtml(inject_style = "") {
-        return this.lines.map(line => this.getHtmlTag(line.getFont()) + line.getHtml(inject_style) + "</p>").join("\n");
+        return this.lines.map(line => this.getHtmlTag(line.getFont()) + line.getHtml(inject_style) + "</p>").join("");
     }
 }
